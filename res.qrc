@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/seo.svg</file>
+        <file>icons/settings.svg</file>
+    </qresource>
+</RCC>
