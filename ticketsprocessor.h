@@ -15,6 +15,9 @@ class TicketsProcessor : public QObject
 public:
     explicit TicketsProcessor(QObject *parent = nullptr);
     void getTickets(const QVector<QString>& actions);
+    void voiceTicket();
+    bool hasActiveTicket();
+    void finishCurrentTicket();
 
     enum class ValidModes {
         SERVICE, CONSIDERATION
@@ -28,11 +31,10 @@ public:
     static const QString WINDOW;
     static const QString ON_SERVICE;
     static const QString IS_DONE;
+    static const QString IS_VOICED;
 signals:
     void ticketError(const QString& message);
     void receivedTicket(const QString& ticket_number);
-
-public slots:
 
 private:
     RequestsProcessor* mRequestsProcessor;

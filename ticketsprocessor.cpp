@@ -15,6 +15,7 @@ const QString TicketsProcessor::USER_NAME = "user_name";
 const QString TicketsProcessor::WINDOW = "window";
 const QString TicketsProcessor::ON_SERVICE = "on_service";
 const QString TicketsProcessor::IS_DONE = "is_done";
+const QString TicketsProcessor::IS_VOICED = "is_voiced";
 
 Ticket fromQJsonObject(const QJsonObject& object)
 {
@@ -23,6 +24,7 @@ Ticket fromQJsonObject(const QJsonObject& object)
     result.ticket_number = object.value(TicketsProcessor::TICKET_NUMBER).toString();
     result.on_service = object.value(TicketsProcessor::ON_SERVICE).toBool();
     result.is_done = object.value(TicketsProcessor::IS_DONE).toBool();
+    result.is_voiced = object.value(TicketsProcessor::IS_VOICED).toBool();
     return result;
 }
 
@@ -46,13 +48,33 @@ TicketsProcessor::TicketsProcessor(QObject *parent)
 
 void TicketsProcessor::getTickets(const QVector<QString> &actions)
 {
+    finishCurrentTicket();
+    mActions = actions;
+    mRequestsProcessor->sendGetTicketsRequest();
+}
+
+void TicketsProcessor::voiceTicket()
+{
+    if (currentTicket.isValid()) {
+        currentTicket.is_voiced = false;
+        mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
+    } else {
+        emit ticketError(tr("Нет текущего талона"));
+    }
+}
+
+bool TicketsProcessor::hasActiveTicket()
+{
+    return currentTicket.isValid() && currentTicket.is_done == false;
+}
+
+void TicketsProcessor::finishCurrentTicket()
+{
     if (currentTicket.isValid() && currentTicket.is_done != true) {
         QMutexLocker locker(&m);
         currentTicket.is_done = true;
         mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
     }
-    mActions = actions;
-    mRequestsProcessor->sendGetTicketsRequest();
 }
 
 bool TicketsProcessor::isValidAction(const QString &action)

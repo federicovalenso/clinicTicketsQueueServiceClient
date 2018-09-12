@@ -9,6 +9,7 @@ struct Ticket
     QString ticket_number;
     bool on_service = false;
     bool is_done = false;
+    bool is_voiced = false;
 
     inline bool isValid()
     {

@@ -50,6 +50,7 @@ void RequestsProcessor::sendUpdateTicketRequest(const Ticket& ticket) const noex
     params.addQueryItem(TicketsProcessor::ID, QString::number(ticket.id));
     params.addQueryItem(TicketsProcessor::ON_SERVICE, fromBool(ticket.on_service));
     params.addQueryItem(TicketsProcessor::IS_DONE, fromBool(ticket.is_done));
+    params.addQueryItem(TicketsProcessor::IS_VOICED, fromBool(ticket.is_voiced));
     params.addQueryItem(TicketsProcessor::WINDOW, QString::number(settings.getWindowNumber()));
     sendPutRequest(params, ACTION_TICKETS);
 }

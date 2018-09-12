@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>451</width>
-    <height>234</height>
+    <width>557</width>
+    <height>256</height>
    </rect>
   </property>
   <property name="font">
@@ -116,6 +116,46 @@ QPushButton:pressed
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="btnVoiceTicket">
+              <property name="font">
+               <font>
+                <family>Century Gothic</family>
+                <pointsize>14</pointsize>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton
+{
+	padding: 4px;
+    font-family: &quot;Century Gothic&quot;;
+    color: orange;
+    background-color: white;
+    border: 2px solid orange;
+}
+QPushButton:hover
+{
+    color: white;
+    background-color: orange;
+}
+QPushButton:pressed
+{
+    border: 3px solid white;
+    color: white;
+    background-color: #E74C3C;
+}</string>
+              </property>
+              <property name="text">
+               <string>Озвучить</string>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -170,6 +210,9 @@ QLabel:hover
             </property>
             <property name="scaledContents">
              <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>

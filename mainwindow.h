@@ -23,13 +23,18 @@ public:
 public slots:
     void setUserName(const QString& userName);
 
+protected:
+    virtual void closeEvent(QCloseEvent *event) override;
+
 private slots:
     void on_btnNext_clicked();
     void on_actionSettings_triggered();
+    void on_btnVoiceTicket_clicked();
 
 private:
     Ui::MainWindow *ui;
     TicketsProcessor* ticketsProcessor;
+    bool isClosingState = false;
     static const int ACTION_COL_NUMBER = 0;
     static const int TRANSLATED_ACTION_COL_NUMBER = 1;
     static const TicketActions mTicketActions;

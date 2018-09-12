@@ -1,6 +1,7 @@
 #include <QTreeWidgetItemIterator>
 #include <QVector>
 #include <QMessageBox>
+#include <QCloseEvent>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "dlgsettings.h"
@@ -43,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
             [=] (const QString& ticketNumber)
             {
                 ui->lblTicketNumber->setText(ticketNumber);
+                if (isClosingState) QMainWindow::close();
             });
 }
 
@@ -54,6 +56,22 @@ MainWindow::~MainWindow()
 void MainWindow::setUserName(const QString &userName)
 {
     ui->lblUserName->setText(userName);
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (ticketsProcessor->hasActiveTicket() == true) {
+        event->ignore();
+        if (QMessageBox::warning(
+                    this,
+                    tr("Есть незавершенный талон!"),
+                    tr("Закончить работу?"),
+                    QMessageBox::Yes,
+                    QMessageBox::No) == QMessageBox::Yes) {
+            ticketsProcessor->finishCurrentTicket();
+            isClosingState = true;
+        }
+    }
 }
 
 void MainWindow::on_btnNext_clicked()
@@ -73,4 +91,9 @@ void MainWindow::on_actionSettings_triggered()
 {
     dlgSettings dlg;
     dlg.exec();
+}
+
+void MainWindow::on_btnVoiceTicket_clicked()
+{
+    ticketsProcessor->voiceTicket();
 }
