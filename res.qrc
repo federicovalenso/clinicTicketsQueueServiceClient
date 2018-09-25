@@ -2,5 +2,9 @@
     <qresource prefix="/icons">
         <file>icons/seo.svg</file>
         <file>icons/settings.svg</file>
+        <file>icons/right-arrow.svg</file>
+        <file>icons/microphone.svg</file>
+        <file>icons/select.svg</file>
+        <file>icons/invoice.svg</file>
     </qresource>
 </RCC>

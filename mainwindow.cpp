@@ -5,6 +5,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "dlgsettings.h"
+#include "dlgchooseticket.h"
 
 const TicketActions MainWindow::mTicketActions = {
     {"book", "Плановая запись"},
@@ -44,7 +45,22 @@ MainWindow::MainWindow(QWidget *parent) :
             [=] (const QString& ticketNumber)
             {
                 ui->lblTicketNumber->setText(ticketNumber);
-                if (isClosingState) QMainWindow::close();
+                if (current_state_ == STATES::CLOSE) QMainWindow::close();
+            });
+    connect(ticketsProcessor,
+            &TicketsProcessor::receivedTickets,
+            this,
+            [=] (const QVector<Ticket>& tickets)
+            {
+                if (current_state_ == STATES::NEXT_TICKET) {
+                    auto oldestTicket = std::min_element(tickets.begin(), tickets.end());
+                    ticketsProcessor->lockTicket(std::move(*oldestTicket));
+                } else {
+                    Ticket ticket = DlgChooseTicket::getTicket(this, tickets);
+                    if (ticket.isValid()) {
+                        ticketsProcessor->lockTicket(std::move(ticket));
+                    }
+                }
             });
 }
 
@@ -69,22 +85,15 @@ void MainWindow::closeEvent(QCloseEvent *event)
                     QMessageBox::Yes,
                     QMessageBox::No) == QMessageBox::Yes) {
             ticketsProcessor->finishCurrentTicket();
-            isClosingState = true;
+            current_state_ = STATES::CLOSE;
         }
     }
 }
 
 void MainWindow::on_btnNext_clicked()
 {
-    QVector<QString> actions;
-    QTreeWidgetItemIterator actionsIt(ui->twTicketActions);
-    while (*actionsIt) {
-        if ((*actionsIt)->checkState(TRANSLATED_ACTION_COL_NUMBER) == Qt::Checked) {
-            actions.push_back((*actionsIt)->text(ACTION_COL_NUMBER));
-        }
-        actionsIt++;
-    }
-    ticketsProcessor->getTickets(std::move(actions));
+    getTickets();
+    current_state_ = STATES::NEXT_TICKET;
 }
 
 void MainWindow::on_actionSettings_triggered()
@@ -96,4 +105,23 @@ void MainWindow::on_actionSettings_triggered()
 void MainWindow::on_btnVoiceTicket_clicked()
 {
     ticketsProcessor->voiceTicket();
+}
+
+void MainWindow::on_btnSelect_clicked()
+{
+    getTickets();
+    current_state_ = STATES::CHOOSE_TICKET;
+}
+
+void MainWindow::getTickets()
+{
+    QVector<QString> actions;
+    QTreeWidgetItemIterator actionsIt(ui->twTicketActions);
+    while (*actionsIt) {
+        if ((*actionsIt)->checkState(TRANSLATED_ACTION_COL_NUMBER) == Qt::Checked) {
+            actions.push_back((*actionsIt)->text(ACTION_COL_NUMBER));
+        }
+        actionsIt++;
+    }
+    ticketsProcessor->getTickets(std::move(actions));
 }

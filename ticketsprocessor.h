@@ -15,6 +15,7 @@ class TicketsProcessor : public QObject
 public:
     explicit TicketsProcessor(QObject *parent = nullptr);
     void getTickets(const QVector<QString>& actions);
+    void lockTicket(const Ticket& ticket);
     void voiceTicket();
     bool hasActiveTicket();
     void finishCurrentTicket();
@@ -35,6 +36,7 @@ public:
 signals:
     void ticketError(const QString& message);
     void receivedTicket(const QString& ticket_number);
+    void receivedTickets(const QVector<Ticket>& tickets);
 
 private:
     RequestsProcessor* mRequestsProcessor;
@@ -44,7 +46,6 @@ private:
 
     bool isValidAction(const QString& action);
     bool isValidTicket(const QJsonObject& ticket, ValidModes);
-    void lockTicket(const Ticket& ticket);
 
 private slots:
     void getTicketRequestFinished(const QByteArray &data);

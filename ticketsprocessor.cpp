@@ -25,6 +25,7 @@ Ticket fromQJsonObject(const QJsonObject& object)
     result.on_service = object.value(TicketsProcessor::ON_SERVICE).toBool();
     result.is_done = object.value(TicketsProcessor::IS_DONE).toBool();
     result.is_voiced = object.value(TicketsProcessor::IS_VOICED).toBool();
+    result.created_at = object.value(TicketsProcessor::CREATED_AT).toString().toLongLong();
     return result;
 }
 
@@ -53,8 +54,16 @@ void TicketsProcessor::getTickets(const QVector<QString> &actions)
     mRequestsProcessor->sendGetTicketsRequest();
 }
 
+void TicketsProcessor::lockTicket(const Ticket &ticket)
+{
+    currentTicket = ticket;
+    currentTicket.on_service = true;
+    mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
+}
+
 void TicketsProcessor::voiceTicket()
 {
+    //TODO: Не работает, если талон самый первый
     if (currentTicket.isValid()) {
         currentTicket.is_voiced = false;
         mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
@@ -73,6 +82,7 @@ void TicketsProcessor::finishCurrentTicket()
     if (currentTicket.isValid() && currentTicket.is_done != true) {
         QMutexLocker locker(&m);
         currentTicket.is_done = true;
+        currentTicket.is_voiced = true;
         mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
     }
 }
@@ -102,24 +112,17 @@ bool TicketsProcessor::isValidTicket(const QJsonObject &ticket, ValidModes mode)
 
 }
 
-void TicketsProcessor::lockTicket(const Ticket &ticket)
-{
-    currentTicket = ticket;
-    currentTicket.on_service = true;
-    mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
-}
-
 void TicketsProcessor::getTicketRequestFinished(const QByteArray &data)
 {
     QJsonDocument jsonInput = QJsonDocument::fromJson(data);
     if (!jsonInput.isEmpty() && jsonInput.isArray()) {
-        QVector<QJsonObject> validJsonTickets;
+        QVector<Ticket> validJsonTickets;
         QJsonArray jsonTicketsArr(jsonInput.array());
         for (const auto& jsonTicketVal : jsonTicketsArr) {
             QJsonObject jsonTicketObj(jsonTicketVal.toObject());
             if (isValidTicket(jsonTicketObj, ValidModes::CONSIDERATION) == true) {
                 if (isValidAction(jsonTicketObj.value(TICKET_ACTION).toString())) {
-                    validJsonTickets.push_back(std::move(jsonTicketObj));
+                    validJsonTickets.push_back(fromQJsonObject(jsonTicketObj));
                 }
             } else {
                 emit ticketError(tr("Сервер вернул некорректные данные"));
@@ -127,12 +130,7 @@ void TicketsProcessor::getTicketRequestFinished(const QByteArray &data)
             }
         }
         if (validJsonTickets.size() > 0) {
-            auto oldestJsonTicket = std::min_element(
-                        validJsonTickets.begin(),
-                        validJsonTickets.end(),
-                        [] (const QJsonObject& lhs, const QJsonObject& rhs)
-                        { return lhs.value(CREATED_AT).toString().toLongLong() < rhs.value(CREATED_AT).toString().toLongLong(); });
-            lockTicket(fromQJsonObject(std::move(*oldestJsonTicket)));
+            emit receivedTickets(validJsonTickets);
         } else {
             emit ticketError(tr("Нет необслуженных квитанций"));
             emit receivedTicket("");

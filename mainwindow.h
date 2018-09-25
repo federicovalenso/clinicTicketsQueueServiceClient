@@ -30,14 +30,22 @@ private slots:
     void on_btnNext_clicked();
     void on_actionSettings_triggered();
     void on_btnVoiceTicket_clicked();
+    void on_btnSelect_clicked();
 
 private:
     Ui::MainWindow *ui;
     TicketsProcessor* ticketsProcessor;
-    bool isClosingState = false;
+    enum STATES {
+        NEXT_TICKET,
+        CHOOSE_TICKET,
+        CLOSE
+    };
+    STATES current_state_ = STATES::NEXT_TICKET;
     static const int ACTION_COL_NUMBER = 0;
     static const int TRANSLATED_ACTION_COL_NUMBER = 1;
     static const TicketActions mTicketActions;
+
+    void getTickets();
 };
 
 #endif // MAINWINDOW_H

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>557</width>
-    <height>256</height>
+    <width>976</width>
+    <height>337</height>
    </rect>
   </property>
   <property name="font">
@@ -69,20 +69,24 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QPushButton" name="btnNext">
-              <property name="font">
-               <font>
-                <family>Century Gothic</family>
-                <pointsize>14</pointsize>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton
+           <widget class="QPushButton" name="btnNext">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Century Gothic</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton
 {
 	padding: 4px;
     font-family: &quot;Century Gothic&quot;;
@@ -101,34 +105,41 @@ QPushButton:pressed
     color: white;
     background-color: #E74C3C;
 }</string>
-              </property>
-              <property name="text">
-               <string>Следующий талон</string>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-              <property name="checked">
-               <bool>false</bool>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btnVoiceTicket">
-              <property name="font">
-               <font>
-                <family>Century Gothic</family>
-                <pointsize>14</pointsize>
-               </font>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton
+            </property>
+            <property name="text">
+             <string>Следующий</string>
+            </property>
+            <property name="icon">
+             <iconset resource="res.qrc">
+              <normaloff>:/icons/icons/right-arrow.svg</normaloff>:/icons/icons/right-arrow.svg</iconset>
+            </property>
+            <property name="checkable">
+             <bool>false</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnVoiceTicket">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Century Gothic</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton
 {
 	padding: 4px;
     font-family: &quot;Century Gothic&quot;;
@@ -147,32 +158,90 @@ QPushButton:pressed
     color: white;
     background-color: #E74C3C;
 }</string>
-              </property>
-              <property name="text">
-               <string>Озвучить</string>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            </property>
+            <property name="text">
+             <string>Озвучить</string>
+            </property>
+            <property name="icon">
+             <iconset resource="res.qrc">
+              <normaloff>:/icons/icons/microphone.svg</normaloff>:/icons/icons/microphone.svg</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnSelect">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Century Gothic</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	padding: 4px;
+    font-family: &quot;Century Gothic&quot;;
+    color: orange;
+    background-color: white;
+    border: 2px solid orange;
+}
+QPushButton:hover
+{
+    color: white;
+    background-color: orange;
+}
+QPushButton:pressed
+{
+    border: 3px solid white;
+    color: white;
+    background-color: #E74C3C;
+}</string>
+            </property>
+            <property name="text">
+             <string>Выбрать из списка</string>
+            </property>
+            <property name="icon">
+             <iconset resource="res.qrc">
+              <normaloff>:/icons/icons/select.svg</normaloff>:/icons/icons/select.svg</iconset>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
+            </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>40</height>
+              <width>264</width>
+              <height>13</height>
              </size>
             </property>
            </spacer>
           </item>
           <item>
            <widget class="QLabel" name="lblTicketNumber">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="font">
              <font>
               <pointsize>50</pointsize>
@@ -221,10 +290,13 @@ QLabel:hover
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
+            </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>40</height>
+              <width>264</width>
+              <height>13</height>
              </size>
             </property>
            </spacer>
@@ -232,20 +304,13 @@ QLabel:hover
          </layout>
         </item>
         <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
          <widget class="QGroupBox" name="groupBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="styleSheet">
            <string notr="true">color: orange;</string>
           </property>
@@ -281,6 +346,22 @@ QLabel:hover
               </property>
              </column>
             </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::MinimumExpanding</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>

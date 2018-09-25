@@ -32,7 +32,9 @@ SOURCES += \
     appsettings.cpp \
     requestsprocessor.cpp \
     dlgsettings.cpp \
-    ticketsprocessor.cpp
+    ticketsprocessor.cpp \
+    dlgchooseticket.cpp \
+    models/ticketsmodel.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -41,12 +43,15 @@ HEADERS += \
     requestsprocessor.h \
     dlgsettings.h \
     ticketsprocessor.h \
-    ticket.h
+    ticket.h \
+    dlgchooseticket.h \
+    models/ticketsmodel.h
 
 FORMS += \
         mainwindow.ui \
     dlgsignin.ui \
-    dlgsettings.ui
+    dlgsettings.ui \
+    dlgchooseticket.ui
 
 win32:RC_ICONS += icon.ico
 
