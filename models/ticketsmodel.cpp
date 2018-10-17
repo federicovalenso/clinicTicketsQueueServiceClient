@@ -1,4 +1,5 @@
 #include <QDateTime>
+#include <QDebug>
 #include "ticketsmodel.h"
 
 TicketsModel::TicketsModel(QObject *parent, const QVector<Ticket> &data)

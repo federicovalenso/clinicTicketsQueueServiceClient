@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>976</width>
-    <height>337</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="font">
@@ -69,7 +69,60 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
+           <widget class="QPushButton" name="btnSwitchWorkingState">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Century Gothic</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	padding: 4px;
+    font-family: &quot;Century Gothic&quot;;
+    color: orange;
+    background-color: white;
+    border: 2px solid orange;
+}
+QPushButton:hover
+{
+    color: white;
+    background-color: orange;
+}
+QPushButton:pressed
+{
+    border: 3px solid white;
+    color: white;
+    background-color: #E74C3C;
+}</string>
+            </property>
+            <property name="text">
+             <string>Начать работу</string>
+            </property>
+            <property name="icon">
+             <iconset resource="res.qrc">
+              <normaloff>:/icons/icons/switch-on.svg</normaloff>:/icons/icons/switch-on.svg</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="btnNext">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -119,10 +172,66 @@ QPushButton:pressed
             <property name="checked">
              <bool>false</bool>
             </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnReturn">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Century Gothic</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	padding: 4px;
+    font-family: &quot;Century Gothic&quot;;
+    color: orange;
+    background-color: white;
+    border: 2px solid orange;
+}
+QPushButton:hover
+{
+    color: white;
+    background-color: orange;
+}
+QPushButton:pressed
+{
+    border: 3px solid white;
+    color: white;
+    background-color: #E74C3C;
+}</string>
+            </property>
+            <property name="text">
+             <string>Вернуть в очередь</string>
+            </property>
+            <property name="icon">
+             <iconset resource="res.qrc">
+              <normaloff>:/icons/icons/back.svg</normaloff>:/icons/icons/back.svg</iconset>
+            </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="btnVoiceTicket">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -173,6 +282,9 @@ QPushButton:pressed
           </item>
           <item>
            <widget class="QPushButton" name="btnSelect">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -215,6 +327,9 @@ QPushButton:pressed
             <property name="icon">
              <iconset resource="res.qrc">
               <normaloff>:/icons/icons/select.svg</normaloff>:/icons/icons/select.svg</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -325,6 +440,11 @@ QLabel:hover
                <width>200</width>
                <height>125</height>
               </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
              </property>
              <property name="headerHidden">
               <bool>true</bool>

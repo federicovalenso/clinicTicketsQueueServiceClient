@@ -11,6 +11,12 @@
 #include <QJsonObject>
 #include "ticket.h"
 
+namespace vvf {
+
+enum class SelectModes {
+    MANUAL, AUTO
+};
+
 class RequestsProcessor : public QObject
 {
     Q_OBJECT
@@ -18,7 +24,7 @@ public:
     explicit RequestsProcessor(QObject *parent = nullptr);
     ~RequestsProcessor();
     void sendLoginRequest(const QString& name, const QString& password) const noexcept;
-    void sendGetTicketsRequest() const noexcept;
+    void sendGetTicketsRequest(SelectModes mode = SelectModes::AUTO) const noexcept;
     void sendUpdateTicketRequest(const Ticket& ticket) const noexcept;
 
 signals:
@@ -44,5 +50,7 @@ private:
     void sendPutRequest(const QUrlQuery& params, const QString& action) const noexcept;
     QNetworkAccessManager *mNetworkManager;
 };
+
+} // namespace vvf
 
 #endif // REQUESTSPROCESSOR_H

@@ -4,6 +4,8 @@
 #include "ticketsprocessor.h"
 #include "appsettings.h"
 
+using namespace vvf;
+
 QString fromBool(bool value)
 {
     return value == true ? "1" : "0";
@@ -34,11 +36,13 @@ void RequestsProcessor::sendLoginRequest(const QString& name, const QString& pas
     sendPostRequest(params, ACTION_LOGIN);
 }
 
-void RequestsProcessor::sendGetTicketsRequest() const noexcept
+void RequestsProcessor::sendGetTicketsRequest(SelectModes mode) const noexcept
 {
-    QString action = QString("%1?%2=0")
+    QString action = QString("%1?%2=0&%3=%4")
             .arg(ACTION_TICKETS)
-            .arg(TicketsProcessor::ON_SERVICE);
+            .arg(TicketsProcessor::ON_SERVICE)
+            .arg(TicketsProcessor::IS_MANUAL)
+            .arg(mode == SelectModes::AUTO ? "0" : "1");
     sendGetRequest(std::move(action));
 }
 
@@ -51,6 +55,7 @@ void RequestsProcessor::sendUpdateTicketRequest(const Ticket& ticket) const noex
     params.addQueryItem(TicketsProcessor::ON_SERVICE, fromBool(ticket.on_service));
     params.addQueryItem(TicketsProcessor::IS_DONE, fromBool(ticket.is_done));
     params.addQueryItem(TicketsProcessor::IS_VOICED, fromBool(ticket.is_voiced));
+    params.addQueryItem(TicketsProcessor::IS_MANUAL, fromBool(ticket.is_manual));
     params.addQueryItem(TicketsProcessor::WINDOW, QString::number(settings.getWindowNumber()));
     sendPutRequest(params, ACTION_TICKETS);
 }

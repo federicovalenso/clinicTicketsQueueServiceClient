@@ -8,6 +8,8 @@
 #include <QNetworkRequest>
 #include <QDebug>
 
+using namespace vvf;
+
 DlgSignIn::DlgSignIn(QWidget *parent) :
     QDialog(parent, Qt::WindowCloseButtonHint),
     ui(new Ui::DlgSignIn)

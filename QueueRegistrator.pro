@@ -34,7 +34,14 @@ SOURCES += \
     dlgsettings.cpp \
     ticketsprocessor.cpp \
     dlgchooseticket.cpp \
-    models/ticketsmodel.cpp
+    models/ticketsmodel.cpp \
+    states/appstate.cpp \
+    states/backgroundstate.cpp \
+    states/nextticketstate.cpp \
+    states/closestate.cpp \
+    states/returnticketstate.cpp \
+    states/voiceticketstate.cpp \
+    states/selectticketstate.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -45,7 +52,8 @@ HEADERS += \
     ticketsprocessor.h \
     ticket.h \
     dlgchooseticket.h \
-    models/ticketsmodel.h
+    models/ticketsmodel.h \
+    states/appstate.h
 
 FORMS += \
         mainwindow.ui \

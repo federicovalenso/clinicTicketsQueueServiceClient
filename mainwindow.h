@@ -4,13 +4,17 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QString>
+#include <QTimer>
 #include "ticketsprocessor.h"
-
-using TicketActions = QMap<QString, QString>;
+#include "states/appstate.h"
 
 namespace Ui {
 class MainWindow;
 }
+
+namespace vvf {
+
+using TicketActions = QMap<QString, QString>;
 
 class MainWindow : public QMainWindow
 {
@@ -31,21 +35,25 @@ private slots:
     void on_actionSettings_triggered();
     void on_btnVoiceTicket_clicked();
     void on_btnSelect_clicked();
+    void on_btnSwitchWorkingState_clicked();
+    void on_btnReturn_clicked();
 
 private:
+    friend class AppState;
     Ui::MainWindow *ui;
     TicketsProcessor* ticketsProcessor;
-    enum STATES {
-        NEXT_TICKET,
-        CHOOSE_TICKET,
-        CLOSE
-    };
-    STATES current_state_ = STATES::NEXT_TICKET;
+    QTimer* timer;
     static const int ACTION_COL_NUMBER = 0;
     static const int TRANSLATED_ACTION_COL_NUMBER = 1;
     static const TicketActions mTicketActions;
+    AppState* state_ = BackgroundState::getInstance();
+    bool isWorking = false;
 
-    void getTickets();
+    void changeState(AppState* state);
+    void getTickets(SelectModes mode = SelectModes::AUTO);
+    void changeButtonsStates();
 };
+
+} // namespace vvf
 
 #endif // MAINWINDOW_H

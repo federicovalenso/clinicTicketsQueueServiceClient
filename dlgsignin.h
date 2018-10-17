@@ -12,6 +12,8 @@ namespace Ui {
 class DlgSignIn;
 }
 
+namespace vvf {
+
 class DlgSignIn : public QDialog
 {
     Q_OBJECT
@@ -33,5 +35,7 @@ private:
     RequestsProcessor *mRequestsProcessor;
     QNetworkAccessManager *mNetworkManager;
 };
+
+} // namespace vvf
 
 #endif // DLGSIGNIN_H

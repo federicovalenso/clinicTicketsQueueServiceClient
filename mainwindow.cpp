@@ -5,7 +5,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "dlgsettings.h"
-#include "dlgchooseticket.h"
+
+using namespace vvf;
 
 const TicketActions MainWindow::mTicketActions = {
     {"book", "Плановая запись"},
@@ -32,35 +33,27 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     ui->twTicketActions->hideColumn(ACTION_COL_NUMBER);
     ticketsProcessor = new TicketsProcessor(this);
+    timer = new QTimer(this);
     connect(ticketsProcessor,
             &TicketsProcessor::ticketError,
             this,
             [=] (const QString& error)
             {
-                QMessageBox::critical(this, tr("Ошибка при получении талона"), error, QMessageBox::Close);
+                state_->error(this, error);
             });
     connect(ticketsProcessor,
             &TicketsProcessor::receivedTicket,
             this,
-            [=] (const QString& ticketNumber)
+            [=] (const Ticket& ticket)
             {
-                ui->lblTicketNumber->setText(ticketNumber);
-                if (current_state_ == STATES::CLOSE) QMainWindow::close();
+                state_->processTicket(this, ticket);
             });
     connect(ticketsProcessor,
             &TicketsProcessor::receivedTickets,
             this,
             [=] (const QVector<Ticket>& tickets)
             {
-                if (current_state_ == STATES::NEXT_TICKET) {
-                    auto oldestTicket = std::min_element(tickets.begin(), tickets.end());
-                    ticketsProcessor->lockTicket(std::move(*oldestTicket));
-                } else {
-                    Ticket ticket = DlgChooseTicket::getTicket(this, tickets);
-                    if (ticket.isValid()) {
-                        ticketsProcessor->lockTicket(std::move(ticket));
-                    }
-                }
+                state_->processTickets(this, tickets);
             });
 }
 
@@ -76,24 +69,12 @@ void MainWindow::setUserName(const QString &userName)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (ticketsProcessor->hasActiveTicket() == true) {
-        event->ignore();
-        if (QMessageBox::warning(
-                    this,
-                    tr("Есть незавершенный талон!"),
-                    tr("Закончить работу?"),
-                    QMessageBox::Yes,
-                    QMessageBox::No) == QMessageBox::Yes) {
-            ticketsProcessor->finishCurrentTicket();
-            current_state_ = STATES::CLOSE;
-        }
-    }
+    state_->close(this, event);
 }
 
 void MainWindow::on_btnNext_clicked()
 {
-    getTickets();
-    current_state_ = STATES::NEXT_TICKET;
+    state_->nextTicket(this);
 }
 
 void MainWindow::on_actionSettings_triggered()
@@ -104,16 +85,20 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_btnVoiceTicket_clicked()
 {
-    ticketsProcessor->voiceTicket();
+    state_->voiceTicket(this);
 }
 
 void MainWindow::on_btnSelect_clicked()
 {
-    getTickets();
-    current_state_ = STATES::CHOOSE_TICKET;
+    state_->selectTicket(this);
 }
 
-void MainWindow::getTickets()
+void MainWindow::on_btnReturn_clicked()
+{
+    state_->returnTicket(this);
+}
+
+void MainWindow::getTickets(SelectModes mode)
 {
     QVector<QString> actions;
     QTreeWidgetItemIterator actionsIt(ui->twTicketActions);
@@ -123,5 +108,46 @@ void MainWindow::getTickets()
         }
         actionsIt++;
     }
-    ticketsProcessor->getTickets(std::move(actions));
+    ticketsProcessor->getTickets(actions, mode);
+}
+
+void MainWindow::changeButtonsStates()
+{
+    ui->btnNext->setEnabled(isWorking);
+    ui->btnSelect->setEnabled(isWorking);
+    ui->btnVoiceTicket->setEnabled(isWorking);
+    ui->btnReturn->setEnabled(isWorking);
+    if (isWorking == true) {
+        ui->btnSwitchWorkingState->setText(tr("Закончить работу"));
+        QIcon icon;
+        icon.addFile(QStringLiteral(":/icons/icons/switch-off.svg"), QSize(), QIcon::Normal, QIcon::Off);
+        ui->btnSwitchWorkingState->setIcon(icon);
+        connect(timer,
+                &QTimer::timeout,
+                this,
+                [=](){
+                    state_->background(this);
+                });
+        timer->start(5000);
+    } else {
+        ui->btnSwitchWorkingState->setText(tr("Начать работу"));
+        QIcon icon;
+        icon.addFile(QStringLiteral(":/icons/icons/switch-on.svg"), QSize(), QIcon::Normal, QIcon::Off);
+        ui->btnSwitchWorkingState->setIcon(icon);
+        if (ticketsProcessor->hasActiveTicket() == true) {
+            ticketsProcessor->finishCurrentTicket();
+        }
+        timer->disconnect();
+    }
+}
+
+void MainWindow::on_btnSwitchWorkingState_clicked()
+{
+    isWorking = !isWorking;
+    changeButtonsStates();
+}
+
+void MainWindow::changeState(AppState* state)
+{
+    state_ = state;
 }

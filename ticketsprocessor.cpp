@@ -7,6 +7,8 @@
 #include "ticketsprocessor.h"
 #include "appsettings.h"
 
+using namespace vvf;
+
 const QString TicketsProcessor::ID = "id";
 const QString TicketsProcessor::TICKET_ACTION = "action_name";
 const QString TicketsProcessor::TICKET_NUMBER = "ticket_number";
@@ -16,81 +18,98 @@ const QString TicketsProcessor::WINDOW = "window";
 const QString TicketsProcessor::ON_SERVICE = "on_service";
 const QString TicketsProcessor::IS_DONE = "is_done";
 const QString TicketsProcessor::IS_VOICED = "is_voiced";
+const QString TicketsProcessor::IS_MANUAL = "is_manual";
 
 Ticket fromQJsonObject(const QJsonObject& object)
 {
     Ticket result;
     result.id = object.value(TicketsProcessor::ID).toInt();
     result.ticket_number = object.value(TicketsProcessor::TICKET_NUMBER).toString();
+    result.action = object.value(TicketsProcessor::TICKET_ACTION).toString();
     result.on_service = object.value(TicketsProcessor::ON_SERVICE).toBool();
     result.is_done = object.value(TicketsProcessor::IS_DONE).toBool();
     result.is_voiced = object.value(TicketsProcessor::IS_VOICED).toBool();
-    result.created_at = object.value(TicketsProcessor::CREATED_AT).toString().toLongLong();
+    result.is_manual = object.value(TicketsProcessor::IS_MANUAL).toBool();
+    result.created_at = object.value(TicketsProcessor::CREATED_AT).toDouble();
     return result;
 }
 
 TicketsProcessor::TicketsProcessor(QObject *parent)
     : QObject(parent)
 {
-    mRequestsProcessor = new RequestsProcessor(this);
-    connect(mRequestsProcessor,
+    requests_processor_ = new RequestsProcessor(this);
+    connect(requests_processor_,
             SIGNAL(ticketUpdated(QByteArray)),
             this,
             SLOT(putTicketRequestFinished(QByteArray)));
-    connect(mRequestsProcessor,
+    connect(requests_processor_,
             SIGNAL(receivedTickets(QByteArray)),
             this,
             SLOT(getTicketRequestFinished(QByteArray)));
-    connect(mRequestsProcessor,
+    connect(requests_processor_,
             SIGNAL(requestError(QString)),
             this,
             SLOT(requestFinisedWithError(QString)));
 }
 
-void TicketsProcessor::getTickets(const QVector<QString> &actions)
+void TicketsProcessor::getTickets(const QVector<QString> &actions, SelectModes mode) noexcept
 {
+    QMutexLocker locker(&m);
     finishCurrentTicket();
-    mActions = actions;
-    mRequestsProcessor->sendGetTicketsRequest();
+    actions_ = actions;
+    mode_ = mode;
+    requests_processor_->sendGetTicketsRequest(mode);
 }
 
-void TicketsProcessor::lockTicket(const Ticket &ticket)
+void TicketsProcessor::lockTicket(const Ticket &ticket) noexcept
 {
-    currentTicket = ticket;
-    currentTicket.on_service = true;
-    mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
+    QMutexLocker locker(&m);
+    current_ticket_ = ticket;
+    current_ticket_.on_service = true;
+    requests_processor_->sendUpdateTicketRequest(current_ticket_);
 }
 
-void TicketsProcessor::voiceTicket()
+void TicketsProcessor::voiceTicket() noexcept
 {
-    //TODO: Не работает, если талон самый первый
-    if (currentTicket.isValid()) {
-        currentTicket.is_voiced = false;
-        mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
+    QMutexLocker locker(&m);
+    if (current_ticket_.isValid()) {
+        current_ticket_.is_voiced = false;
+        requests_processor_->sendUpdateTicketRequest(current_ticket_);
     } else {
         emit ticketError(tr("Нет текущего талона"));
     }
 }
 
-bool TicketsProcessor::hasActiveTicket()
+bool TicketsProcessor::hasActiveTicket() const noexcept
 {
-    return currentTicket.isValid() && currentTicket.is_done == false;
+    return current_ticket_.isValid() && current_ticket_.is_done == false;
 }
 
-void TicketsProcessor::finishCurrentTicket()
+void TicketsProcessor::returnCurrentTicket() noexcept
 {
-    if (currentTicket.isValid() && currentTicket.is_done != true) {
-        QMutexLocker locker(&m);
-        currentTicket.is_done = true;
-        currentTicket.is_voiced = true;
-        mRequestsProcessor->sendUpdateTicketRequest(currentTicket);
+    QMutexLocker locker(&m);
+    if (current_ticket_.isValid() && current_ticket_.is_done != true) {
+        current_ticket_.on_service = false;
+        current_ticket_.is_manual = true;
+        requests_processor_->sendUpdateTicketRequest(current_ticket_);
+        current_ticket_ = {};
+        emit receivedTicket(current_ticket_);
     }
 }
 
-bool TicketsProcessor::isValidAction(const QString &action)
+void TicketsProcessor::finishCurrentTicket() noexcept
+{
+    if (current_ticket_.isValid() && current_ticket_.is_done != true) {
+        current_ticket_.is_done = true;
+        current_ticket_.is_voiced = true;
+        requests_processor_->sendUpdateTicketRequest(current_ticket_);
+    }
+}
+
+bool TicketsProcessor::isValidAction(const QString &action) const noexcept
 {
     bool result = false;
-    for (auto it = mActions.begin(); it != mActions.end(); it++) {
+    for (auto it = actions_.begin(); it != actions_.end(); it++) {
         if (*it == action) {
             result = true;
             break;
@@ -99,30 +118,33 @@ bool TicketsProcessor::isValidAction(const QString &action)
     return result;
 }
 
-bool TicketsProcessor::isValidTicket(const QJsonObject &ticket, ValidModes mode)
+bool TicketsProcessor::isValidTicket(const QJsonObject &ticket) const noexcept
 {
-    if (mode == ValidModes::CONSIDERATION) {
         return ticket.contains(ID) &&
                 ticket.contains(TICKET_ACTION) &&
                 ticket.contains(CREATED_AT);
-    } else {
-        return ticket.contains(ID) &&
-                ticket.contains(TICKET_NUMBER);
-    }
 
 }
 
-void TicketsProcessor::getTicketRequestFinished(const QByteArray &data)
+void TicketsProcessor::getTicketRequestFinished(const QByteArray &data) noexcept
 {
     QJsonDocument jsonInput = QJsonDocument::fromJson(data);
     if (!jsonInput.isEmpty() && jsonInput.isArray()) {
         QVector<Ticket> validJsonTickets;
         QJsonArray jsonTicketsArr(jsonInput.array());
-        for (const auto& jsonTicketVal : jsonTicketsArr) {
+        SelectModes mode;
+        {
+            QMutexLocker locker(&m);
+            mode = mode_;
+        }
+        for (const auto jsonTicketVal : jsonTicketsArr) {
             QJsonObject jsonTicketObj(jsonTicketVal.toObject());
-            if (isValidTicket(jsonTicketObj, ValidModes::CONSIDERATION) == true) {
-                if (isValidAction(jsonTicketObj.value(TICKET_ACTION).toString())) {
-                    validJsonTickets.push_back(fromQJsonObject(jsonTicketObj));
+            if (isValidTicket(jsonTicketObj) == true) {
+                Ticket ticket = fromQJsonObject(jsonTicketObj);
+                if (mode == SelectModes::MANUAL ||
+                        (isValidAction(ticket.action) &&
+                         !ticket.is_manual)) {
+                    validJsonTickets.push_back(std::move(ticket));
                 }
             } else {
                 emit ticketError(tr("Сервер вернул некорректные данные"));
@@ -133,19 +155,24 @@ void TicketsProcessor::getTicketRequestFinished(const QByteArray &data)
             emit receivedTickets(validJsonTickets);
         } else {
             emit ticketError(tr("Нет необслуженных квитанций"));
-            emit receivedTicket("");
+            emit receivedTicket({});
         }
     } else {
         emit ticketError(tr("Сервер вернул некорректные данные"));
     }
 }
 
-void TicketsProcessor::putTicketRequestFinished(const QByteArray &)
+void TicketsProcessor::putTicketRequestFinished(const QByteArray &) noexcept
 {
-    emit receivedTicket(currentTicket.ticket_number);
+    QMutexLocker locker(&m);
+    if (current_ticket_.is_done == false) {
+        emit receivedTicket(current_ticket_);
+    } else {
+        emit receivedTicket({});
+    }
 }
 
-void TicketsProcessor::requestFinisedWithError(const QString &message)
+void TicketsProcessor::requestFinisedWithError(const QString &message) const noexcept
 {
     emit ticketError(message);
 }

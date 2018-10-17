@@ -5,6 +5,7 @@
 
 int main(int argc, char *argv[])
 {
+    using namespace vvf;
     QApplication app(argc, argv);
     app.setOrganizationName("MANO \'MDC\'");
     app.setApplicationName("Queue registrator");

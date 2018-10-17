@@ -9,20 +9,19 @@
 #include "requestsprocessor.h"
 #include "ticket.h"
 
+namespace vvf {
+
 class TicketsProcessor : public QObject
 {
     Q_OBJECT
 public:
     explicit TicketsProcessor(QObject *parent = nullptr);
-    void getTickets(const QVector<QString>& actions);
-    void lockTicket(const Ticket& ticket);
-    void voiceTicket();
-    bool hasActiveTicket();
-    void finishCurrentTicket();
-
-    enum class ValidModes {
-        SERVICE, CONSIDERATION
-    };
+    void getTickets(const QVector<QString>& actions = {}, SelectModes mode = SelectModes::AUTO) noexcept;
+    void lockTicket(const Ticket& ticket) noexcept;
+    void voiceTicket() noexcept;
+    bool hasActiveTicket() const noexcept;
+    void returnCurrentTicket() noexcept;
+    void finishCurrentTicket() noexcept;
 
     static const QString ID;
     static const QString TICKET_ACTION;
@@ -33,24 +32,29 @@ public:
     static const QString ON_SERVICE;
     static const QString IS_DONE;
     static const QString IS_VOICED;
+    static const QString IS_MANUAL;
+
 signals:
-    void ticketError(const QString& message);
-    void receivedTicket(const QString& ticket_number);
-    void receivedTickets(const QVector<Ticket>& tickets);
+    void ticketError(const QString& message) const;
+    void receivedTicket(const Ticket& ticket) const;
+    void receivedTickets(const QVector<Ticket>& tickets) const;
 
 private:
-    RequestsProcessor* mRequestsProcessor;
-    QVector<QString> mActions;
-    Ticket currentTicket;
+    RequestsProcessor* requests_processor_;
+    mutable QVector<QString> actions_;
+    mutable Ticket current_ticket_;
+    mutable SelectModes mode_ = SelectModes::AUTO;
     QMutex m;
 
-    bool isValidAction(const QString& action);
-    bool isValidTicket(const QJsonObject& ticket, ValidModes);
+    bool isValidAction(const QString& action) const noexcept;
+    bool isValidTicket(const QJsonObject& ticket) const noexcept;
 
 private slots:
-    void getTicketRequestFinished(const QByteArray &data);
-    void putTicketRequestFinished(const QByteArray &);
-    void requestFinisedWithError(const QString& message);
+    void getTicketRequestFinished(const QByteArray& data) noexcept;
+    void putTicketRequestFinished(const QByteArray&) noexcept;
+    void requestFinisedWithError(const QString& message) const noexcept;
 };
+
+} // namespace vvf
 
 #endif // TICKETSPROCESSOR_H
