@@ -1,7 +1,7 @@
 #include "dlgsettings.h"
 #include "ui_dlgsettings.h"
 
-dlgSettings::dlgSettings(QWidget *parent) :
+SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::dlgSettings)
 {
@@ -11,12 +11,12 @@ dlgSettings::dlgSettings(QWidget *parent) :
     ui->sbWindow->setValue(mSettings.getWindowNumber());
 }
 
-dlgSettings::~dlgSettings()
+SettingsDialog::~SettingsDialog()
 {
     delete ui;
 }
 
-void dlgSettings::on_buttonBox_accepted()
+void SettingsDialog::on_buttonBox_accepted()
 {
     mSettings.setConnectionSettings(ui->leServer->text(),
                                     ui->sbPort->value());

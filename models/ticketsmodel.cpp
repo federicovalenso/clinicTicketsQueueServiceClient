@@ -1,4 +1,5 @@
 #include <QDateTime>
+#include <QColor>
 #include <QDebug>
 #include "ticketsmodel.h"
 
@@ -25,6 +26,19 @@ QVariant TicketsModel::data(const QModelIndex &index, int role) const
         } else if (index.column() == 1) {
             return QDateTime::fromSecsSinceEpoch(data_.at(index.row()).created_at).time();
         };
+    } else if (role == Qt::TextAlignmentRole) {
+        return Qt::AlignCenter;
+    } else if (role == Qt::BackgroundRole) {
+        QColor color;
+        if (data_.at(index.row()).is_manual == 1) {
+            color.setRgb(255, 0, 0);
+        } else if (index.row() % 2 == 0) {
+            color.setRgb(72, 219, 251);
+        } else {
+            color.setRgb(0, 210, 211);
+        }
+        color.setAlpha(70);
+        return color;
     }
     return QVariant();
 }

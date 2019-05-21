@@ -25,5 +25,4 @@ void SelectTicketState::processTickets(MainWindow* w, const QVector<Ticket>& tic
         isSelected = true;
         lockTicket(w, ticket);
     }
-    changeState(w, BackgroundState::getInstance());
 }

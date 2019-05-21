@@ -16,12 +16,13 @@ class DlgChooseTicket : public QDialog
 
 public:
     explicit DlgChooseTicket(QWidget *parent = nullptr, const QVector<Ticket> &data = {});
-    ~DlgChooseTicket();
+    ~DlgChooseTicket() override;
     Ticket currentTicket();
     static Ticket getTicket(QWidget *parent = nullptr, const QVector<Ticket> &data = {});
 
 protected:
     virtual void resizeEvent(QResizeEvent *event) override;
+    virtual void closeEvent(QCloseEvent* event) override;
 
 private slots:
     void on_tvTickets_doubleClicked(const QModelIndex &);

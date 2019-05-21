@@ -12,5 +12,4 @@ ReturnTicketState *ReturnTicketState::getInstance()
 void ReturnTicketState::processTicket(MainWindow* w, const Ticket& ticket)
 {
     AppState::processTicket(w, ticket);
-    changeState(w, BackgroundState::getInstance());
 }

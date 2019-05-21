@@ -4,8 +4,8 @@
 #include "appsettings.h"
 #include "requestsprocessor.h"
 
-#include <QDialog>
 #include <QAbstractButton>
+#include <QDialog>
 #include <QString>
 
 namespace Ui {
@@ -14,28 +14,23 @@ class DlgSignIn;
 
 namespace vvf {
 
-class DlgSignIn : public QDialog
-{
-    Q_OBJECT
+class DlgSignIn : public QDialog {
+  Q_OBJECT
 
-public:
-    explicit DlgSignIn(QWidget *parent = 0);
-    ~DlgSignIn();
+ public:
+  DlgSignIn(QWidget *parent, RequestsProcessor *rp);
+  ~DlgSignIn();
 
-signals:
-    void loginAccepted(const QString& userName);
+ private slots:
+  void on_buttonBox_clicked(QAbstractButton *button);
+  void loginRequestFinished();
 
-private slots:
-    void on_buttonBox_clicked(QAbstractButton *button);
-    void loginRequestFinished();
-
-private:
-    Ui::DlgSignIn *ui;
-    AppSettings& mSettings = AppSettings::getInstance();
-    RequestsProcessor *mRequestsProcessor;
-    QNetworkAccessManager *mNetworkManager;
+ private:
+  Ui::DlgSignIn *ui;
+  AppSettings &mSettings = AppSettings::getInstance();
+  RequestsProcessor *mRequestsProcessor;
 };
 
-} // namespace vvf
+}  // namespace vvf
 
-#endif // DLGSIGNIN_H
+#endif  // DLGSIGNIN_H

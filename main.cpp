@@ -1,21 +1,20 @@
-#include "mainwindow.h"
 #include "dlgsignin.h"
+#include "mainwindow.h"
 
 #include <QApplication>
 
-int main(int argc, char *argv[])
-{
-    using namespace vvf;
-    QApplication app(argc, argv);
-    app.setOrganizationName("MANO \'MDC\'");
-    app.setApplicationName("Queue registrator");
+int main(int argc, char *argv[]) {
+  using namespace vvf;
+  QApplication app(argc, argv);
+  app.setOrganizationName("MANO \'MDC\'");
+  app.setApplicationName("Queue registrator");
 
-    DlgSignIn signIn;
-    MainWindow mainWindow;
-    QObject::connect(&signIn, SIGNAL(rejected()), &mainWindow, SLOT(close()));
-    QObject::connect(&signIn, SIGNAL(accepted()), &mainWindow, SLOT(show()));
-    QObject::connect(&signIn, SIGNAL(loginAccepted(QString)), &mainWindow, SLOT(setUserName(QString)));
-    signIn.show();
+  RequestsProcessor rp(&app);
+  DlgSignIn signIn(nullptr, &rp);
+  MainWindow mainWindow(nullptr, &rp);
+  QObject::connect(&signIn, SIGNAL(rejected()), &mainWindow, SLOT(close()));
+  QObject::connect(&signIn, SIGNAL(accepted()), &mainWindow, SLOT(show()));
+  signIn.show();
 
-    return app.exec();
+  return app.exec();
 }

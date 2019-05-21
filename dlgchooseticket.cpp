@@ -1,6 +1,7 @@
 #include <memory>
 #include "dlgchooseticket.h"
 #include "ui_dlgchooseticket.h"
+#include "appsettings.h"
 
 DlgChooseTicket::DlgChooseTicket(QWidget *parent, const QVector<Ticket>& data) :
     QDialog(parent),
@@ -9,6 +10,9 @@ DlgChooseTicket::DlgChooseTicket(QWidget *parent, const QVector<Ticket>& data) :
     ui->setupUi(this);
     model = new TicketsModel(this, data);
     ui->tvTickets->setModel(model);
+
+    AppSettings& settings = AppSettings::getInstance();
+    restoreGeometry(settings.getSelectTicketsDialogGeometry());
 }
 
 DlgChooseTicket::~DlgChooseTicket()
@@ -43,6 +47,13 @@ void DlgChooseTicket::resizeEvent(QResizeEvent *event)
         ui->tvTickets->setColumnWidth(i, ui->tvTickets->width() / column_count - 5);
     }
     QDialog::resizeEvent(event);
+}
+
+void DlgChooseTicket::closeEvent(QCloseEvent* event)
+{
+    AppSettings& settings = AppSettings::getInstance();
+    settings.setSelectTicketsDialogSettings(saveGeometry());
+    QDialog::closeEvent(event);
 }
 
 void DlgChooseTicket::on_tvTickets_doubleClicked(const QModelIndex &)

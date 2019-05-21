@@ -25,6 +25,8 @@ void AppState::nextTicket(MainWindow* w)
 {
     w->changeState(NextTicketState::getInstance());
     w->getTickets();
+    w->setButtonsEnabled(false);
+    QTimer::singleShot(3000, w, [w](){w->setButtonsEnabled(true);});
 }
 
 void AppState::returnTicket(MainWindow* w)
@@ -64,7 +66,7 @@ void AppState::close(MainWindow* w, QCloseEvent* event)
 void AppState::error(MainWindow* w, const QString& error)
 {
     QMessageBox::critical(w,
-                          QObject::tr("Талон не получен"),
+                          QObject::tr("Ошибка"),
                           error,
                           QMessageBox::Close);
     w->changeState(BackgroundState::getInstance());

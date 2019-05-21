@@ -22,6 +22,19 @@ struct Ticket
     {
         id = -1;
     }
+    inline operator QString() const
+    {
+        QString result = QString("{%1 : %2, %3 : %4, %5 : %6, %7 : %8, %9 : %10, %11 : %12, %13 : %14, %15 : %16}")
+                .arg("id").arg(id)
+                .arg("number").arg(ticket_number)
+                .arg("action").arg(action)
+                .arg("on_service").arg(on_service)
+                .arg("is_done").arg(is_done)
+                .arg("is_voiced").arg(is_voiced)
+                .arg("is_manual").arg(is_manual)
+                .arg("created_at").arg(created_at);
+        return result;
+    }
 };
 
 inline bool operator < (const Ticket& lhs, const Ticket& rhs)

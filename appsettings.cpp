@@ -13,87 +13,110 @@ AppSettings::AppSettings()
 
 void AppSettings::setConnectionSettings(const QString& serverAddr, const int port)
 {
-    mServerAddr = serverAddr;
-    mPort = port;
+    server_addr_ = serverAddr;
+    port_ = port;
 
-    mSettings.beginGroup(CONNECTION_GROUP);
-    mSettings.setValue(SERVER_ADDR, serverAddr);
-    mSettings.setValue(PORT, port);
-    mSettings.endGroup();
+    settings_.beginGroup(CONNECTION_GROUP);
+    settings_.setValue(SERVER_ADDR, serverAddr);
+    settings_.setValue(PORT, port);
+    settings_.endGroup();
 }
 
 void AppSettings::setWindowNumber(const int windowNumber)
 {
 
-    mWindowNumber = windowNumber;
-    mSettings.beginGroup(USER_GROUP);
-    mSettings.setValue(WINDOW_NUMBER, mWindowNumber);
-    mSettings.endGroup();
+    window_number_ = windowNumber;
+    settings_.beginGroup(USER_GROUP);
+    settings_.setValue(WINDOW_NUMBER, window_number_);
+    settings_.endGroup();
 }
 
 void AppSettings::setSizeSettings(const QByteArray &mainWindowGeometry, const QByteArray &mainWindowState)
 {
-    mMainWindowGeometry = mainWindowGeometry;
-    mMainWindowState = mainWindowState;
-    mSettings.beginGroup(SIZE_GROUP);
-    mSettings.setValue(MAIN_WINDOW_GEOMETRY, mainWindowGeometry);
-    mSettings.setValue(MAIN_WINDOW_STATE, mainWindowState);
-    mSettings.endGroup();
+    main_window_geometry_ = mainWindowGeometry;
+    main_window_state_ = mainWindowState;
+    settings_.beginGroup(SIZE_GROUP);
+    settings_.setValue(MAIN_WINDOW_GEOMETRY, mainWindowGeometry);
+    settings_.setValue(MAIN_WINDOW_STATE, mainWindowState);
+    settings_.endGroup();
 }
 
 QString AppSettings::getServerAddr() const
 {
-    return mServerAddr;
+    return server_addr_;
 }
 
 int AppSettings::getPort() const
 {
-    return mPort;
+    return port_;
 }
 
 int AppSettings::getWindowNumber() const
 {
-    return  mWindowNumber;
+    return  window_number_;
 }
 
 QByteArray AppSettings::getMainWindowState() const
 {
-    return mMainWindowState;
+    return main_window_state_;
 }
 
 QByteArray AppSettings::getMainWindowGeometry() const
 {
-    return mMainWindowGeometry;
+    return main_window_geometry_;
 }
 
+QByteArray AppSettings::getSelectTicketsDialogGeometry() const
+{
+    return select_tickets_dialog_geometry_;
+}
 
 QString AppSettings::getUserName() const
 {
-    return mUserName;
+    return user_name_;
 }
 
 void AppSettings::setUserName(const QString &userName)
 {
-    mUserName = userName;
-    mSettings.beginGroup(USER_GROUP);
-    mSettings.setValue(USER_NAME, userName);
-    mSettings.endGroup();
+    user_name_ = userName;
+    settings_.beginGroup(USER_GROUP);
+    settings_.setValue(USER_NAME, userName);
+    settings_.endGroup();
+}
+
+void AppSettings::setMainWindowSettings(const QByteArray& geometry, const QByteArray& state)
+{
+    main_window_geometry_ = geometry;
+    main_window_state_ = state;
+    settings_.beginGroup(SIZE_GROUP);
+    settings_.setValue(MAIN_WINDOW_GEOMETRY, geometry);
+    settings_.setValue(MAIN_WINDOW_STATE, state);
+    settings_.endGroup();
+}
+
+void AppSettings::setSelectTicketsDialogSettings(const QByteArray& geometry)
+{
+    select_tickets_dialog_geometry_ = geometry;
+    settings_.beginGroup(SIZE_GROUP);
+    settings_.setValue(SELECT_TICKETS_DIALOG_GEOMETRY, geometry);
+    settings_.endGroup();
 }
 
 void AppSettings::ReadSettings()
 {
-    mSettings.beginGroup(CONNECTION_GROUP);
-    mServerAddr = mSettings.value(SERVER_ADDR).toString();
-    mPort = mSettings.value(PORT).toInt();
-    mSettings.endGroup();
+    settings_.beginGroup(CONNECTION_GROUP);
+    server_addr_ = settings_.value(SERVER_ADDR).toString();
+    port_ = settings_.value(PORT).toInt();
+    settings_.endGroup();
 
-    mSettings.beginGroup(SIZE_GROUP);
-    mMainWindowGeometry = mSettings.value(MAIN_WINDOW_GEOMETRY).toByteArray();
-    mMainWindowState = mSettings.value(MAIN_WINDOW_STATE).toByteArray();
-    mSettings.endGroup();
+    settings_.beginGroup(SIZE_GROUP);
+    main_window_geometry_ = settings_.value(MAIN_WINDOW_GEOMETRY).toByteArray();
+    main_window_state_ = settings_.value(MAIN_WINDOW_STATE).toByteArray();
+    select_tickets_dialog_geometry_ = settings_.value(SELECT_TICKETS_DIALOG_GEOMETRY).toByteArray();
+    settings_.endGroup();
 
-    mSettings.beginGroup(USER_GROUP);
-    mUserName = mSettings.value(USER_NAME).toString();
-    mWindowNumber = mSettings.value(WINDOW_NUMBER).toInt();
-    mSettings.endGroup();
+    settings_.beginGroup(USER_GROUP);
+    user_name_ = settings_.value(USER_NAME).toString();
+    window_number_ = settings_.value(WINDOW_NUMBER).toInt();
+    settings_.endGroup();
 }
