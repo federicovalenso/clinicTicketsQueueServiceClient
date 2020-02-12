@@ -6,58 +6,85 @@
 #include "ticketsprocessor.h"
 
 using namespace vvf;
+using NetworkError = QNetworkReply::NetworkError;
 
 QString fromBool(bool value) { return value == true ? "1" : "0"; }
 
 RequestsProcessor::RequestsProcessor(QObject* parent) : QObject(parent) {
-  mNetworkManager = new QNetworkAccessManager(this);
-  connect(mNetworkManager, SIGNAL(finished(QNetworkReply*)), this,
+  network_manager_ = new QNetworkAccessManager(this);
+  connect(network_manager_, SIGNAL(finished(QNetworkReply*)), this,
           SLOT(replyFinished(QNetworkReply*)));
 }
 
 RequestsProcessor::~RequestsProcessor() {}
 
-const QString RequestsProcessor::ACTION_TICKETS = "tickets";
-const QString RequestsProcessor::ACTION_LOGIN = "login";
-const QString RequestsProcessor::NAME_PARAM = "name";
-const QString RequestsProcessor::ON_SERVICE_PARAM = "on_service";
-const QString RequestsProcessor::PASSWORD_PARAM = "password";
-const QString RequestsProcessor::ACTIONS_PARAM = "actions";
-const QString RequestsProcessor::TICKET_PARAM = "ticket";
-const QByteArray RequestsProcessor::SET_COOKIE_HEADER = "Set-Cookie";
-const QByteArray RequestsProcessor::SESSION_ID = "sessionid";
+const QString RequestsProcessor::kActionLogin = "login";
+const QString RequestsProcessor::kActionTickets = "api/tickets";
+const QString RequestsProcessor::kActionTakeTicket = "api/ticket/take";
+const QString RequestsProcessor::kActionReturnTicket = "api/ticket/return";
+const QString RequestsProcessor::kActionVoiceTicket = "api/ticket/voice";
+const QString RequestsProcessor::kActionFinishTicket = "api/ticket/finish";
+const QString RequestsProcessor::kActionsParam = "actions";
+const QString RequestsProcessor::kTicketParam = "ticket";
+const QByteArray RequestsProcessor::kSetCookieHeader = "Set-Cookie";
+const QByteArray RequestsProcessor::kSessionId = "sessionid";
+const QMap<NetworkError, QString> RequestsProcessor::kErrorMessages = {
+    {NetworkError::AuthenticationRequiredError,
+     QObject::tr("Неудачная попытка авторизации")},
+    {NetworkError::ContentAccessDenied, QObject::tr("Требуется авторизация")},
+    {NetworkError::ContentOperationNotPermittedError,
+     QObject::tr("Требуется авторизация")},
+    {NetworkError::ContentConflictError,
+     QObject::tr("Конфликт. Талон занят другим регистратором")}};
 
-void RequestsProcessor::sendLoginRequest(const QString& name,
-                                         const QString& password) const
-    noexcept {
+void RequestsProcessor::login(const QString& name,
+                              const QString& password) const noexcept {
   QUrlQuery params;
-  params.addQueryItem(NAME_PARAM, name);
-  params.addQueryItem(PASSWORD_PARAM, password);
-  sendPostRequest(params, ACTION_LOGIN);
+  params.addQueryItem("name", name);
+  params.addQueryItem("password", password);
+  sendPostRequest(params, kActionLogin);
 }
 
-void RequestsProcessor::sendGetTicketsRequest(SelectModes mode) const noexcept {
+void RequestsProcessor::getTickets(SelectModes mode) const noexcept {
   QString action = QString("%1?%2=0&%3=%4")
-                       .arg(ACTION_TICKETS)
-                       .arg(TicketsProcessor::ON_SERVICE)
-                       .arg(TicketsProcessor::IS_MANUAL)
+                       .arg(kActionTickets)
+                       .arg(TicketsProcessor::kOnService)
+                       .arg(TicketsProcessor::kIsManual)
                        .arg(mode == SelectModes::AUTO ? "0" : "1");
   sendGetRequest(std::move(action));
 }
 
-void RequestsProcessor::sendUpdateTicketRequest(const Ticket& ticket) const
-    noexcept {
-  QUrlQuery params;
-  AppSettings& settings = AppSettings::getInstance();
-  params.addQueryItem(TicketsProcessor::ID, QString::number(ticket.id));
-  params.addQueryItem(TicketsProcessor::ON_SERVICE,
-                      fromBool(ticket.on_service));
-  params.addQueryItem(TicketsProcessor::IS_DONE, fromBool(ticket.is_done));
-  params.addQueryItem(TicketsProcessor::IS_VOICED, fromBool(ticket.is_voiced));
-  params.addQueryItem(TicketsProcessor::IS_MANUAL, fromBool(ticket.is_manual));
-  params.addQueryItem(TicketsProcessor::WINDOW,
-                      QString::number(settings.getWindowNumber()));
-  sendPutRequest(params, ACTION_TICKETS);
+void RequestsProcessor::updateTicket(int id, const QString& action,
+                                     QUrlQuery&& query) const noexcept {
+  query.addQueryItem(TicketsProcessor::kId, QString::number(id));
+  query.addQueryItem(
+      TicketsProcessor::kWindow,
+      QString::number(AppSettings::getInstance().getWindowNumber()));
+  sendPutRequest(query, action);
+}
+
+void RequestsProcessor::takeTicket(int id) const noexcept {
+  QUrlQuery query;
+  query.addQueryItem(TicketsProcessor::kOnService, "1");
+  updateTicket(id, kActionTakeTicket, std::move(query));
+}
+
+void RequestsProcessor::returnTicket(int id) const noexcept {
+  QUrlQuery query;
+  query.addQueryItem(TicketsProcessor::kOnService, "0");
+  updateTicket(id, kActionReturnTicket, std::move(query));
+}
+
+void RequestsProcessor::voiceTicket(int id) const noexcept {
+  QUrlQuery query;
+  query.addQueryItem(TicketsProcessor::kIsVoiced, "0");
+  updateTicket(id, kActionVoiceTicket, std::move(query));
+}
+
+void RequestsProcessor::finishTicket(int id) const noexcept {
+  QUrlQuery query;
+  query.addQueryItem(TicketsProcessor::kIsDone, "1");
+  updateTicket(id, kActionFinishTicket, std::move(query));
 }
 
 void RequestsProcessor::sendGetRequest(QString action) const noexcept {
@@ -68,7 +95,7 @@ void RequestsProcessor::sendGetRequest(QString action) const noexcept {
                         .arg(action);
   QUrl url(std::move(address));
   QNetworkRequest request(url);
-  mNetworkManager->get(request);
+  network_manager_->get(request);
 }
 
 void RequestsProcessor::sendPostRequest(const QUrlQuery& params,
@@ -82,7 +109,7 @@ void RequestsProcessor::sendPostRequest(const QUrlQuery& params,
   QNetworkRequest request(url);
   request.setHeader(QNetworkRequest::ContentTypeHeader,
                     "application/x-www-form-urlencoded");
-  mNetworkManager->post(request, params.toString(QUrl::FullyEncoded).toUtf8());
+  network_manager_->post(request, params.toString(QUrl::FullyEncoded).toUtf8());
 }
 
 void RequestsProcessor::sendPutRequest(const QUrlQuery& params,
@@ -96,21 +123,20 @@ void RequestsProcessor::sendPutRequest(const QUrlQuery& params,
   QNetworkRequest request(url);
   request.setHeader(QNetworkRequest::ContentTypeHeader,
                     "application/x-www-form-urlencoded");
-  mNetworkManager->put(request, params.toString(QUrl::FullyEncoded).toUtf8());
+  network_manager_->put(request, params.toString(QUrl::FullyEncoded).toUtf8());
 }
 
 QNetworkCookie RequestsProcessor::getCookie(const QNetworkReply& reply) {
   QNetworkCookie result;
-  if (reply.hasRawHeader(SET_COOKIE_HEADER)) {
-    auto cookie_header = reply.rawHeader(SET_COOKIE_HEADER);
-    auto cookie_parts = cookie_header.split(';');
+  if (reply.hasRawHeader(kSetCookieHeader)) {
+    const auto cookie_header = reply.rawHeader(kSetCookieHeader);
+    const auto cookie_parts = cookie_header.split(';');
     for (const auto& part : cookie_parts) {
-      auto params = part.split('=');
-      if (params.size() == 2) {
-        if (params.first() == SESSION_ID) {
-          result.setName(params.first());
-          result.setValue(params.last());
-        }
+      const auto params = part.split('=');
+      if (params.size() == 2 && params.first() == kSessionId) {
+        result.setName(params.first());
+        result.setValue(params.last());
+        break;
       }
     }
   }
@@ -118,29 +144,31 @@ QNetworkCookie RequestsProcessor::getCookie(const QNetworkReply& reply) {
 }
 
 void RequestsProcessor::replyFinished(QNetworkReply* reply) {
-  auto error = reply->error();
-  if (error != QNetworkReply::NetworkError::NoError) {
-    QString errorMessage;
-    if (error == QNetworkReply::NetworkError::AuthenticationRequiredError) {
-      errorMessage = tr("Неудачная попытка авторизации");
-    } else if (error == QNetworkReply::NetworkError::ContentAccessDenied) {
-      errorMessage = tr("Требуется авторизация");
+  qDebug() << reply->url();
+  const auto error = reply->error();
+  if (error != NetworkError::NoError) {
+    QString errorMessage = kErrorMessages.value(error);
+    if (errorMessage.isEmpty()) errorMessage = "Произошла ошибка";
+    if (error == NetworkError::AuthenticationRequiredError ||
+        error == NetworkError::ContentAccessDenied ||
+        error == NetworkError::ContentOperationNotPermittedError) {
+      emit loginError();
     } else {
-      errorMessage = tr("Не удалось получить данные с сервера...");
+      emit requestError(errorMessage);
     }
-    emit requestError(errorMessage);
   } else {
     int status =
         reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (status == 200) {
       QNetworkAccessManager::Operation operation = reply->operation();
       if (operation == QNetworkAccessManager::GetOperation) {
-        if (reply->url().path() == '/' + ACTION_TICKETS) {
+        if (reply->url().path() == '/' + kActionTickets) {
           emit receivedTickets(reply->readAll());
         }
       } else if (operation == QNetworkAccessManager::PostOperation) {
-        if (reply->url().path() == '/' + ACTION_LOGIN) {
-          if (auto cookie = getCookie(*reply); !cookie.value().isEmpty()) {
+        if (reply->url().path() == '/' + kActionLogin) {
+          const auto cookie = getCookie(*reply);
+          if (!cookie.value().isEmpty()) {
             reply->manager()->cookieJar()->insertCookie(cookie);
             emit loginFinished();
           } else {
@@ -149,7 +177,7 @@ void RequestsProcessor::replyFinished(QNetworkReply* reply) {
           }
         }
       } else if (operation == QNetworkAccessManager::PutOperation) {
-        if (reply->url().path() == '/' + ACTION_TICKETS) {
+        if (reply->url().path().startsWith("/api/ticket")) {
           emit ticketUpdated(reply->readAll());
         }
       }
