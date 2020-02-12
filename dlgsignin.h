@@ -26,9 +26,13 @@ class DlgSignIn : public QDialog {
   void loginRequestFinished();
 
  private:
-  Ui::DlgSignIn *ui;
-  AppSettings &mSettings = AppSettings::getInstance();
-  RequestsProcessor *mRequestsProcessor;
+  Ui::DlgSignIn *ui_;
+  AppSettings &settings_ = AppSettings::getInstance();
+  RequestsProcessor *requests_processor_;
+
+  // QWidget interface
+ protected:
+  void showEvent(QShowEvent *) override;
 };
 
 }  // namespace vvf
