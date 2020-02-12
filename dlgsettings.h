@@ -8,20 +8,19 @@ namespace Ui {
 class dlgSettings;
 }
 
-class SettingsDialog : public QDialog
-{
-    Q_OBJECT
+class SettingsDialog : public QDialog {
+  Q_OBJECT
 
-public:
-    explicit SettingsDialog(QWidget *parent = nullptr);
-    ~SettingsDialog();
+ public:
+  explicit SettingsDialog(QWidget *parent);
+  ~SettingsDialog();
 
-private slots:
-    void on_buttonBox_accepted();
+ private slots:
+  void on_buttonBox_accepted();
 
-private:
-    Ui::dlgSettings *ui;
-    AppSettings& mSettings = AppSettings::getInstance();
+ private:
+  Ui::dlgSettings *ui;
+  AppSettings &mSettings = AppSettings::getInstance();
 };
 
-#endif // DLGSETTINGS_H
+#endif  // DLGSETTINGS_H
