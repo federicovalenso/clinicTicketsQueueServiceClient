@@ -8,7 +8,7 @@
 
 using namespace vvf;
 
-const TicketActions MainWindow::TICKET_ACTIONS = {
+const TicketActions MainWindow::kTicketActions = {
     {"book", "Плановая запись"},
     {"disp", "Диспансеризация"},
     {"receipt", "Льготные рецепты"},
@@ -18,39 +18,39 @@ const TicketActions MainWindow::TICKET_ACTIONS = {
     {"other", "Прочее"}};
 
 MainWindow::MainWindow(QWidget* parent, RequestsProcessor* rp)
-    : QMainWindow(parent), ui(new Ui::MainWindow) {
-  ui->setupUi(this);
-  for (auto it = TICKET_ACTIONS.begin(); it != TICKET_ACTIONS.end(); it++) {
-    QTreeWidgetItem* twItem = new QTreeWidgetItem(ui->twTicketActions);
-    twItem->setText(ACTION_COL_NUMBER, it.key());
-    twItem->setText(TRANSLATED_ACTION_COL_NUMBER, it.value());
+    : QMainWindow(parent), ui_(new Ui::MainWindow) {
+  ui_->setupUi(this);
+  for (auto it = kTicketActions.begin(); it != kTicketActions.end(); ++it) {
+    QTreeWidgetItem* twItem = new QTreeWidgetItem(ui_->twTicketActions);
+    twItem->setText(kActionColNumber, it.key());
+    twItem->setText(kTranslatedActionColNumber, it.value());
     twItem->setFlags(twItem->flags() | Qt::ItemIsUserCheckable);
-    twItem->setCheckState(TRANSLATED_ACTION_COL_NUMBER, Qt::Checked);
-    ui->twTicketActions->addTopLevelItem(twItem);
+    twItem->setCheckState(kTranslatedActionColNumber, Qt::Checked);
+    ui_->twTicketActions->addTopLevelItem(twItem);
   }
-  ui->twTicketActions->hideColumn(ACTION_COL_NUMBER);
+  ui_->twTicketActions->hideColumn(kActionColNumber);
 
   AppSettings& settings = AppSettings::getInstance();
   restoreGeometry(settings.getMainWindowGeometry());
   restoreState(settings.getMainWindowState());
   setUserName(settings.getUserName());
 
-  ticketsProcessor = new TicketsProcessor(this, rp);
-  timer = new QTimer(this);
-  connect(ticketsProcessor, &TicketsProcessor::ticketError, this,
+  tickets_processor_ = new TicketsProcessor(this, rp);
+  timer_ = new QTimer(this);
+  connect(tickets_processor_, &TicketsProcessor::ticketError, this,
           [=](const QString& error) { state_->error(this, error); });
-  connect(ticketsProcessor, &TicketsProcessor::receivedTicket, this,
+  connect(tickets_processor_, &TicketsProcessor::receivedTicket, this,
           [=](const Ticket& ticket) { state_->processTicket(this, ticket); });
-  connect(ticketsProcessor, &TicketsProcessor::receivedTickets, this,
+  connect(tickets_processor_, &TicketsProcessor::receivedTickets, this,
           [=](const QVector<Ticket>& tickets) {
             state_->processTickets(this, tickets);
           });
 }
 
-MainWindow::~MainWindow() { delete ui; }
+MainWindow::~MainWindow() { delete ui_; }
 
 void MainWindow::setUserName(const QString& userName) {
-  ui->lblUserName->setText(userName);
+  ui_->lblUserName->setText(userName);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
@@ -63,7 +63,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 void MainWindow::on_btnNext_clicked() { state_->nextTicket(this); }
 
 void MainWindow::on_actionSettings_triggered() {
-  SettingsDialog dlg;
+  SettingsDialog dlg(this);
   dlg.exec();
 }
 
@@ -75,53 +75,54 @@ void MainWindow::on_btnReturn_clicked() { state_->returnTicket(this); }
 
 void MainWindow::getTickets(SelectModes mode) {
   QVector<QString> actions;
-  QTreeWidgetItemIterator actionsIt(ui->twTicketActions);
+  QTreeWidgetItemIterator actionsIt(ui_->twTicketActions);
   while (*actionsIt) {
-    if ((*actionsIt)->checkState(TRANSLATED_ACTION_COL_NUMBER) == Qt::Checked) {
-      actions.push_back((*actionsIt)->text(ACTION_COL_NUMBER));
+    if ((*actionsIt)->checkState(kTranslatedActionColNumber) == Qt::Checked) {
+      actions.push_back((*actionsIt)->text(kActionColNumber));
     }
-    actionsIt++;
+    ++actionsIt;
   }
-  ticketsProcessor->getTickets(actions, mode);
+  tickets_processor_->getTickets(actions, mode);
 }
 
-void MainWindow::changeButtonsStates() {
-  ui->btnNext->setEnabled(isWorking);
-  ui->btnSelect->setEnabled(isWorking);
-  ui->btnVoiceTicket->setEnabled(isWorking);
-  ui->btnReturn->setEnabled(isWorking);
-  if (isWorking == true) {
-    ui->btnSwitchWorkingState->setText(tr("Закончить работу"));
+void MainWindow::switchWorkingState() {
+  ui_->btnNext->setEnabled(is_working_);
+  ui_->btnSelect->setEnabled(is_working_);
+  ui_->btnVoiceTicket->setEnabled(is_working_);
+  ui_->btnReturn->setEnabled(is_working_);
+  if (is_working_) {
+    ui_->btnSwitchWorkingState->setText(tr("Закончить работу"));
     QIcon icon;
     icon.addFile(QStringLiteral(":/icons/icons/switch-off.svg"), QSize(),
                  QIcon::Normal, QIcon::Off);
-    ui->btnSwitchWorkingState->setIcon(icon);
-    connect(timer, &QTimer::timeout, this, [=]() { state_->background(this); });
-    timer->start(5000);
+    ui_->btnSwitchWorkingState->setIcon(icon);
+    connect(timer_, &QTimer::timeout, this,
+            [=]() { state_->background(this); });
+    timer_->start(5000);
   } else {
-    ui->btnSwitchWorkingState->setText(tr("Начать работу"));
+    ui_->btnSwitchWorkingState->setText(tr("Начать работу"));
     QIcon icon;
     icon.addFile(QStringLiteral(":/icons/icons/switch-on.svg"), QSize(),
                  QIcon::Normal, QIcon::Off);
-    ui->btnSwitchWorkingState->setIcon(icon);
-    if (ticketsProcessor->hasActiveTicket() == true) {
-      ticketsProcessor->finishCurrentTicket();
+    ui_->btnSwitchWorkingState->setIcon(icon);
+    if (tickets_processor_->hasActiveTicket()) {
+      tickets_processor_->finishCurrentTicket();
     }
-    timer->disconnect();
+    timer_->disconnect();
   }
 }
 
 void MainWindow::setButtonsEnabled(bool mode) {
-  ui->btnNext->setEnabled(mode);
-  ui->btnReturn->setEnabled(mode);
-  ui->btnSelect->setEnabled(mode);
-  ui->btnSwitchWorkingState->setEnabled(mode);
-  ui->btnVoiceTicket->setEnabled(mode);
+  ui_->btnNext->setEnabled(mode);
+  ui_->btnReturn->setEnabled(mode);
+  ui_->btnSelect->setEnabled(mode);
+  ui_->btnSwitchWorkingState->setEnabled(mode);
+  ui_->btnVoiceTicket->setEnabled(mode);
 }
 
 void MainWindow::on_btnSwitchWorkingState_clicked() {
-  isWorking = !isWorking;
-  changeButtonsStates();
+  is_working_ = !is_working_;
+  switchWorkingState();
 }
 
 void MainWindow::changeState(AppState* state) { state_ = state; }

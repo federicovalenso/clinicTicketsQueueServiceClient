@@ -38,19 +38,20 @@ class MainWindow : public QMainWindow {
   void on_btnReturn_clicked();
 
  private:
+  static const int kActionColNumber = 0;
+  static const int kTranslatedActionColNumber = 1;
+  static const TicketActions kTicketActions;
   friend class AppState;
-  Ui::MainWindow* ui;
-  TicketsProcessor* ticketsProcessor;
-  QTimer* timer;
-  static const int ACTION_COL_NUMBER = 0;
-  static const int TRANSLATED_ACTION_COL_NUMBER = 1;
-  static const TicketActions TICKET_ACTIONS;
+  Ui::MainWindow* ui_;
+  TicketsProcessor* tickets_processor_;
+  QTimer* timer_;
+
   AppState* state_ = BackgroundState::getInstance();
-  bool isWorking = false;
+  bool is_working_ = false;
 
   void changeState(AppState* state);
   void getTickets(SelectModes mode = SelectModes::AUTO);
-  void changeButtonsStates();
+  void switchWorkingState();
   void setButtonsEnabled(bool mode);
 };
 
