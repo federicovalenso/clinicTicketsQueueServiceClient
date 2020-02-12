@@ -6,6 +6,8 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
+#include <atomic>
+#include <experimental/optional>
 #include "requestsprocessor.h"
 #include "ticket.h"
 
@@ -18,21 +20,21 @@ class TicketsProcessor : public QObject {
   TicketsProcessor(QObject* parent, RequestsProcessor* rp);
   void getTickets(const QVector<QString>& actions = {},
                   SelectModes mode = SelectModes::AUTO) noexcept;
-  void lockTicket(const Ticket& ticket) noexcept;
+  void lockTicket(int id) noexcept;
   void voiceTicket() noexcept;
   bool hasActiveTicket() const noexcept;
   void returnCurrentTicket() noexcept;
   void finishCurrentTicket() noexcept;
 
-  static const QString ID;
-  static const QString TICKET_ACTION;
-  static const QString TICKET_NUMBER;
-  static const QString CREATED_AT;
-  static const QString WINDOW;
-  static const QString ON_SERVICE;
-  static const QString IS_DONE;
-  static const QString IS_VOICED;
-  static const QString IS_MANUAL;
+  static const QString kId;
+  static const QString kTicketAction;
+  static const QString kTicketNumber;
+  static const QString kCreatedAt;
+  static const QString kWindow;
+  static const QString kOnService;
+  static const QString kIsDone;
+  static const QString kIsVoiced;
+  static const QString kIsManual;
 
  signals:
   void ticketError(const QString& message) const;
@@ -42,9 +44,9 @@ class TicketsProcessor : public QObject {
  private:
   RequestsProcessor* requests_processor_;
   mutable QVector<QString> actions_;
-  mutable Ticket current_ticket_;
-  mutable SelectModes mode_ = SelectModes::AUTO;
-  QMutex m_;
+  mutable std::experimental::optional<Ticket> current_ticket_;
+  mutable std::atomic<SelectModes> mode_{SelectModes::AUTO};
+  mutable QMutex mutex_;
 
   bool isValidAction(const QString& action) const noexcept;
   bool isValidTicket(const QJsonObject& ticket) const noexcept;
