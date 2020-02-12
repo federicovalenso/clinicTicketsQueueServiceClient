@@ -3,13 +3,7 @@
 
 using namespace vvf;
 
-ReturnTicketState *ReturnTicketState::getInstance()
-{
-    static ReturnTicketState instance;
-    return &instance;
-}
-
-void ReturnTicketState::processTicket(MainWindow* w, const Ticket& ticket)
-{
-    AppState::processTicket(w, ticket);
+ReturnTicketState* ReturnTicketState::getInstance() {
+  static ReturnTicketState instance;
+  return &instance;
 }
